@@ -33,55 +33,52 @@
     app.use("/api/room", roomRoutes);
     app.use("/api/user", userRoutes);
 
-    // Make io accessible to other modules
+    
     app.set('io', io);
 
-    connectDB();
-
-    // Socket.io connection handling
+    
     io.on('connection', (socket) => {
         console.log('User connected:', socket.id);
 
-        // User connects with their userId
+      
         socket.on('userConnected', async (userId) => {
             socket.userId = userId;
             socket.join(userId);
 
-            // Update user online status
+           
             await User.findByIdAndUpdate(userId, {
                 isOnline: true,
                 status: 'online',
                 lastSeen: new Date()
             });
 
-            // Notify all users about this user coming online
             io.emit('userOnline', { userId });
             console.log(`User ${userId} is now online`);
         });
 
-        // Join a room
+       
         socket.on('joinRoom', (roomId) => {
             socket.join(roomId);
             console.log(`User ${socket.userId} joined room ${roomId}`);
         });
 
-        // Leave a room
+       
         socket.on('leaveRoom', (roomId) => {
             socket.leave(roomId);
             console.log(`User ${socket.userId} left room ${roomId}`);
         });
 
-        // Typing indicator
+        
         socket.on('typing', ({ roomId, userId }) => {
             if (roomId) {
                 socket.to(roomId).emit('userTyping', { userId });
             } else {
-                // For direct messages, would need receiverId
+              
                 socket.broadcast.emit('userTyping', { userId });
             }
         });
 
-        // Stop typing indicator
+       
         socket.on('stopTyping', ({ roomId, userId }) => {
             if (roomId) {
                 socket.to(roomId).emit('userStoppedTyping', { userId });
@@ -93,14 +90,14 @@
         // Disconnect
         socket.on('disconnect', async () => {
             if (socket.userId) {
-                // Update user offline status
+               
                 await User.findByIdAndUpdate(socket.userId, {
                     isOnline: false,
                     status: 'offline',
                     lastSeen: new Date()
                 });
 
-                // Notify all users about this user going offline
+                
                 io.emit('userOffline', { userId: socket.userId });
                 console.log(`User ${socket.userId} is now offline`);
             }
@@ -108,6 +105,18 @@
         });
     });
 
-    server.listen(PORT, () => {
-    console.log("server is running on PORT:" + PORT);
-    });
+    const startServer = async () => {
+        try {
+            await connectDB();
+            server.listen(PORT || 8080, () => {
+                console.log("server is running on PORT:" + (PORT || 8080));
+            });
+        } catch {
+            console.error(
+                "Server startup aborted. Check MONGODB_URL and allow this machine's IP in MongoDB Atlas Network Access.",
+            );
+            process.exitCode = 1;
+        }
+    };
+
+    startServer();
