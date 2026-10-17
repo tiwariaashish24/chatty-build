@@ -81,7 +81,7 @@ export const sendMessage = async(req, res) => {
         const senderId = req.user._id;
 
 
-        //usercheck images
+      
         let imageUrl;
         if(image) {
             const uploadResponse = await cloudinary.uploader.upload(image);
@@ -97,12 +97,12 @@ export const sendMessage = async(req, res) => {
 
         await newMessage.save();
 
-        // Get io instance from app
+      
         const io = req.app.get('io');
 
-        // Emit message to receiver's room
+        
         io.to(reciverId).emit('receiveMessage', newMessage);
-        // Also emit to sender's room for consistency
+        
         io.to(senderId.toString()).emit('receiveMessage', newMessage);
 
         res.status(201).json(newMessage)
@@ -144,15 +144,13 @@ export const sendRoomMessage = async(req, res) => {
 
         await newMessage.save();
 
-        // Update room's last message and activity
         room.lastMessage = newMessage._id;
         room.lastActivity = new Date();
         await room.save();
 
-        // Get io instance from app
         const io = req.app.get('io');
 
-        // Emit message to room
+       
         io.to(roomId).emit('receiveRoomMessage', newMessage);
 
         res.status(201).json(newMessage);
@@ -174,7 +172,6 @@ export const deleteMessage = async(req, res) => {
             return res.status(404).json({ message: "Message not found" });
         }
 
-        // Only sender can delete
         if (message.senderId.toString() !== userId.toString()) {
             return res.status(403).json({ message: "Can only delete your own messages" });
         }
@@ -183,10 +180,9 @@ export const deleteMessage = async(req, res) => {
         message.deletedAt = new Date();
         await message.save();
 
-        // Get io instance from app
+       
         const io = req.app.get('io');
 
-        // Emit deletion event
         if (message.roomId) {
             io.to(message.roomId.toString()).emit('messageDeleted', { messageId });
         } else {
@@ -214,7 +210,7 @@ export const editMessage = async(req, res) => {
             return res.status(404).json({ message: "Message not found" });
         }
 
-        // Only sender can edit
+        
         if (message.senderId.toString() !== userId.toString()) {
             return res.status(403).json({ message: "Can only edit your own messages" });
         }
@@ -224,10 +220,10 @@ export const editMessage = async(req, res) => {
         message.editedAt = new Date();
         await message.save();
 
-        // Get io instance from app
+        
         const io = req.app.get('io');
 
-        // Emit edit event
+      
         if (message.roomId) {
             io.to(message.roomId.toString()).emit('messageEdited', message);
         } else {
@@ -255,27 +251,27 @@ export const addReaction = async(req, res) => {
             return res.status(404).json({ message: "Message not found" });
         }
 
-        // Check if user already reacted with this emoji
+       
         const existingReaction = message.reactions.find(
             r => r.userId.toString() === userId.toString() && r.emoji === emoji
         );
 
         if (existingReaction) {
-            // Remove reaction if already exists
+           
             message.reactions = message.reactions.filter(
                 r => !(r.userId.toString() === userId.toString() && r.emoji === emoji)
             );
         } else {
-            // Add new reaction
+         
             message.reactions.push({ userId, emoji });
         }
 
         await message.save();
 
-        // Get io instance from app
+       
         const io = req.app.get('io');
 
-        // Emit reaction event
+      
         if (message.roomId) {
             io.to(message.roomId.toString()).emit('messageReaction', { messageId, reactions: message.reactions });
         } else {
@@ -311,10 +307,10 @@ export const markAsRead = async(req, res) => {
         message.readAt = new Date();
         await message.save();
 
-        // Get io instance from app
+        
         const io = req.app.get('io');
 
-        // Emit read receipt
+        
         io.to(message.senderId.toString()).emit('messageRead', { messageId });
 
         res.status(200).json({ message: "Message marked as read" });

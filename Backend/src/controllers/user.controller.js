@@ -17,7 +17,6 @@ export const updateStatus = async (req, res) => {
             { new: true }
         ).select("-password");
 
-        // Notify via socket
         const io = req.app.get('io');
         io.emit('userStatusChanged', { userId, status });
 
