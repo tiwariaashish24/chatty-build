@@ -65,7 +65,7 @@ export const getRoom = async (req, res) => {
             return res.status(404).json({ message: "Room not found" });
         }
 
-        // Check if user is a member
+    
         if (!room.members.some(member => member._id.toString() === userId.toString())) {
             return res.status(403).json({ message: "Not a member of this room" });
         }
@@ -101,7 +101,7 @@ export const joinRoom = async (req, res) => {
         room.lastActivity = new Date();
         await room.save();
 
-        // Notify via socket
+        
         const io = req.app.get('io');
         io.to(id).emit('userJoinedRoom', { userId, roomId: id });
 
@@ -128,10 +128,9 @@ export const leaveRoom = async (req, res) => {
             return res.status(400).json({ message: "Not a member of this room" });
         }
 
-        // Remove user from members
+      
         room.members = room.members.filter(member => member.toString() !== userId.toString());
 
-        // Remove from admins if admin
         room.admins = room.admins.filter(admin => admin.toString() !== userId.toString());
 
         // If creator leaves, assign new admin
@@ -145,7 +144,6 @@ export const leaveRoom = async (req, res) => {
         room.lastActivity = new Date();
         await room.save();
 
-        // Notify via socket
         const io = req.app.get('io');
         io.to(id).emit('userLeftRoom', { userId, roomId: id });
 
@@ -169,7 +167,7 @@ export const addMember = async (req, res) => {
             return res.status(404).json({ message: "Room not found" });
         }
 
-        // Check if current user is admin
+      
         if (!room.admins.includes(currentUserId)) {
             return res.status(403).json({ message: "Only admins can add members" });
         }
@@ -182,7 +180,7 @@ export const addMember = async (req, res) => {
         room.lastActivity = new Date();
         await room.save();
 
-        // Notify via socket
+       
         const io = req.app.get('io');
         io.to(id).emit('memberAdded', { userId, roomId: id });
 
@@ -219,7 +217,7 @@ export const removeMember = async (req, res) => {
         room.lastActivity = new Date();
         await room.save();
 
-        // Notify via socket
+    
         const io = req.app.get('io');
         io.to(id).emit('memberRemoved', { userId, roomId: id });
 
@@ -243,7 +241,6 @@ export const updateRoom = async (req, res) => {
             return res.status(404).json({ message: "Room not found" });
         }
 
-        // Check if user is admin
         if (!room.admins.includes(userId)) {
             return res.status(403).json({ message: "Only admins can update room" });
         }
@@ -255,7 +252,7 @@ export const updateRoom = async (req, res) => {
         room.lastActivity = new Date();
         await room.save();
 
-        // Notify via socket
+     
         const io = req.app.get('io');
         io.to(id).emit('roomUpdated', room);
 
@@ -285,7 +282,7 @@ export const deleteRoom = async (req, res) => {
 
         await Room.findByIdAndDelete(id);
 
-        // Notify via socket
+    
         const io = req.app.get('io');
         io.to(id).emit('roomDeleted', { roomId: id });
 
