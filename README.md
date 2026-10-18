@@ -39,31 +39,7 @@ A real-time chat application built with **React, Vite, Node.js, Express, MongoDB
 - Cloudinary
 - dotenv
 
-## 📁 Project Structure
 
-```text
-chatty-build/
-├── Backend/
-│   ├── src/
-│   │   ├── controllers/       # Authentication, messages, rooms, users
-│   │   ├── lib/               # Database, Cloudinary, utility setup
-│   │   ├── middleware/        # Authentication middleware
-│   │   ├── models/            # Mongoose models
-│   │   ├── routes/            # API routes
-│   │   └── index.js           # Express and Socket.IO server
-│   ├── .env.example
-│   └── package.json
-├── Frontend/
-│   ├── src/
-│   │   ├── components/        # Shared and UI components
-│   │   ├── contexts/          # Auth and socket contexts
-│   │   ├── hooks/
-│   │   ├── lib/
-│   │   ├── pages/             # Login, signup, chat, rooms
-│   │   └── services/          # API service functions
-│   └── package.json
-└── README.md
-```
 
 ## ✅ Prerequisites
 
