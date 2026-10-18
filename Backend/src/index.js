@@ -3,6 +3,7 @@
     import messageRoutes from "./routes/message.route.js";
     import roomRoutes from "./routes/room.route.js";
     import userRoutes from "./routes/user.route.js";
+    import uploadRoutes from "./routes/upload.route.js";
     import dotenv from "dotenv";
     import { connectDB } from "./lib/db.js";
     import cookieParser from 'cookie-parser';

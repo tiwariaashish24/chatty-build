@@ -315,7 +315,7 @@ export const acceptInvite = async (req, res) => {
 // Update profile
 export const updateProfile = async (req, res) => {
     try {
-        const { fullName, username, bio, profilePic } = req.body;
+        const { fullName, username, bio, profilePic, chatBackground } = req.body;
         const userId = req.user._id;
 
         const updateData = {};
@@ -323,6 +323,7 @@ export const updateProfile = async (req, res) => {
         if (username) updateData.username = username;
         if (bio !== undefined) updateData.bio = bio;
         if (profilePic) updateData.profilePic = profilePic;
+        if (chatBackground !== undefined) updateData.chatBackground = chatBackground;
 
         // Check if username is already taken
         if (username) {
