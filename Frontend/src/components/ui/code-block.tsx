@@ -4,7 +4,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button.tsx"
 import { CheckIcon, CopyIcon } from "@phosphor-icons/react"
 
 const codeBlockVariants = cva(

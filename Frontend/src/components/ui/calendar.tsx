@@ -9,7 +9,7 @@ import {
   type Locale,
 } from "react-day-picker"
 
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button.tsx"
 import { CaretLeftIcon, CaretRightIcon, CaretDownIcon } from "@phosphor-icons/react"
 
 function Calendar({

@@ -1,27 +1,28 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
-
-const AuthContext = createContext(null);
+import AuthContext from './auth-context';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const data = await authService.checkAuth();
       setUser(data);
-    } catch (error) {
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Authentication is loaded from the server after the provider mounts.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    checkAuth();
+  }, [checkAuth]);
 
   const signup = async (userData) => {
     try {
@@ -52,7 +53,7 @@ export const AuthProvider = ({ children }) => {
       await authService.logout();
       setUser(null);
       toast.success('Logged out successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Logout failed');
     }
   };
@@ -62,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       const data = await authService.updateProfile(profilePic);
       setUser(data);
       toast.success('Profile updated successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Profile update failed');
     }
   };
@@ -82,12 +83,4 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
 };

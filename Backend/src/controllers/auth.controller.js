@@ -1,4 +1,3 @@
-import e from "express";
 import { generateToken } from "../lib/util.js";
 import User from "../models/user.model.js"
 import bcrypt from 'bcryptjs'
@@ -35,27 +34,22 @@ export const signup = async (req, res) => {
         password:hashedPassword,
     });
 
-    if(newUser){
-        //gen jwt tocken
-        generateToken(newUser._id, res);
-        await newUser.save();
+    await newUser.save();
+    generateToken(newUser._id, res);
 
-
-        res.status(201).json({
-            _id:newUser._id,
-            fullName: newUser.fullName,
-            email: newUser.email,
-            profilePic: newUser.profilePic,
-            isOnline: newUser.isOnline,
-            status: newUser.status,
-         });
-
-    }
-    else{
-        res.status(400).json({ message: "Invalid user data"});
-    }
+    res.status(201).json({
+        _id:newUser._id,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        profilePic: newUser.profilePic,
+        isOnline: newUser.isOnline,
+        status: newUser.status,
+     });
    } catch (error) {
     console.log("Error in signup", error.message);
+    if (error.code === 11000) {
+        return res.status(400).json({ message: "Email already exists" });
+    }
     res.status(500).json({message : "Internal Server Error"})
     
    }

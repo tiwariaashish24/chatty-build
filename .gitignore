@@ -61,3 +61,4 @@ Frontend/node_modules/
 Frontend/dist/
 Frontend/.env
 Frontend/.vite/
+!Frontend/package-lock.json

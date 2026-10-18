@@ -7,7 +7,7 @@ import {
 } from "@shadcn/react/message-scroller"
 import { cn } from "cn"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button.tsx"
 import { ArrowDownIcon } from "@phosphor-icons/react"
 
 function MessageScrollerProvider(

@@ -1,123 +1,69 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
-import { useAuth } from './AuthContext';
+import SocketContext from './socket-context';
+import { useAuth } from '@/hooks/use-auth';
 
-const SocketContext = createContext(null);
-
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8080';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
 
 export const SocketProvider = ({ children }) => {
-  const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { user } = useAuth();
+  const userId = user?._id;
+  const socket = useMemo(
+    () => (userId ? io(SOCKET_URL, { withCredentials: true, autoConnect: false }) : null),
+    [userId],
+  );
 
   useEffect(() => {
-    if (user) {
-      const newSocket = io(SOCKET_URL, {
-        withCredentials: true,
-      });
+    if (!socket) return undefined;
 
-      newSocket.on('connect', () => {
-        console.log('Connected to socket');
-        newSocket.emit('userConnected', user._id);
-      });
+    const handleConnect = () => socket.emit('userConnected', userId);
+    const handleUserOnline = ({ userId: onlineUserId }) => {
+      setOnlineUsers((currentUsers) =>
+        currentUsers.includes(onlineUserId)
+          ? currentUsers
+          : [...currentUsers, onlineUserId],
+      );
+    };
+    const handleUserOffline = ({ userId: offlineUserId }) => {
+      setOnlineUsers((currentUsers) =>
+        currentUsers.filter((currentUserId) => currentUserId !== offlineUserId),
+      );
+    };
+    const handleDisconnect = () => setOnlineUsers([]);
 
-      newSocket.on('userOnline', ({ userId }) => {
-        setOnlineUsers((prev) => [...prev, userId]);
-      });
+    socket.on('connect', handleConnect);
+    socket.on('userOnline', handleUserOnline);
+    socket.on('userOffline', handleUserOffline);
+    socket.on('disconnect', handleDisconnect);
+    socket.connect();
 
-      newSocket.on('userOffline', ({ userId }) => {
-        setOnlineUsers((prev) => prev.filter((id) => id !== userId));
-      });
+    return () => {
+      socket.disconnect();
+      socket.removeAllListeners();
+    };
+  }, [socket, userId]);
 
-      newSocket.on('receiveMessage', (message) => {
-        // Handle in chat component
-      });
-
-      newSocket.on('receiveRoomMessage', (message) => {
-        // Handle in room component
-      });
-
-      newSocket.on('messageDeleted', ({ messageId }) => {
-        // Handle in chat component
-      });
-
-      newSocket.on('messageEdited', (message) => {
-        // Handle in chat component
-      });
-
-      newSocket.on('messageReaction', ({ messageId, reactions }) => {
-        // Handle in chat component
-      });
-
-      newSocket.on('messageRead', ({ messageId }) => {
-        // Handle in chat component
-      });
-
-      newSocket.on('userTyping', ({ userId }) => {
-        // Handle in chat component
-      });
-
-      newSocket.on('userStoppedTyping', ({ userId }) => {
-        // Handle in chat component
-      });
-
-      newSocket.on('disconnect', () => {
-        console.log('Disconnected from socket');
-      });
-
-      setSocket(newSocket);
-
-      return () => {
-        newSocket.disconnect();
-      };
-    }
-  }, [user]);
-
-  const joinRoom = (roomId) => {
-    if (socket) {
-      socket.emit('joinRoom', roomId);
-    }
-  };
-
-  const leaveRoom = (roomId) => {
-    if (socket) {
-      socket.emit('leaveRoom', roomId);
-    }
-  };
-
-  const sendTyping = (roomId, userId) => {
-    if (socket) {
-      socket.emit('typing', { roomId, userId });
-    }
-  };
-
-  const stopTyping = (roomId, userId) => {
-    if (socket) {
-      socket.emit('stopTyping', { roomId, userId });
-    }
-  };
-
-  return (
-    <SocketContext.Provider
-      value={{
-        socket,
-        onlineUsers,
-        joinRoom,
-        leaveRoom,
-        sendTyping,
-        stopTyping,
-      }}
-    >
-      {children}
-    </SocketContext.Provider>
+  const joinRoom = useCallback(
+    (roomId) => socket?.emit('joinRoom', roomId),
+    [socket],
   );
-};
+  const leaveRoom = useCallback(
+    (roomId) => socket?.emit('leaveRoom', roomId),
+    [socket],
+  );
+  const sendTyping = useCallback(
+    (roomId, typingUserId) => socket?.emit('typing', { roomId, userId: typingUserId }),
+    [socket],
+  );
+  const stopTyping = useCallback(
+    (roomId, typingUserId) => socket?.emit('stopTyping', { roomId, userId: typingUserId }),
+    [socket],
+  );
+  const value = useMemo(
+    () => ({ socket, onlineUsers, joinRoom, leaveRoom, sendTyping, stopTyping }),
+    [socket, onlineUsers, joinRoom, leaveRoom, sendTyping, stopTyping],
+  );
 
-export const useSocket = () => {
-  const context = useContext(SocketContext);
-  if (!context) {
-    throw new Error('useSocket must be used within SocketProvider');
-  }
-  return context;
+  return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
 };

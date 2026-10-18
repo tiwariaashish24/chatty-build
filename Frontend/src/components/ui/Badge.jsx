@@ -1,18 +1,21 @@
+import { Badge as ShadcnBadge } from '@/components/ui/badge.tsx';
+
 const Badge = ({ children, variant = 'default', className = '' }) => {
   const variants = {
-    default: 'bg-gray-100 text-gray-800',
-    primary: 'bg-indigo-100 text-indigo-800',
-    success: 'bg-green-100 text-green-800',
-    danger: 'bg-red-100 text-red-800',
-    warning: 'bg-yellow-100 text-yellow-800',
+    default: 'bg-muted text-muted-foreground',
+    primary: 'bg-primary/10 text-primary',
+    success: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    danger: 'border-red-200 bg-red-50 text-red-700',
+    warning: 'border-amber-200 bg-amber-50 text-amber-700',
   };
 
   return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}
+    <ShadcnBadge
+      variant="outline"
+      className={`${variants[variant] || variants.default} ${className}`}
     >
       {children}
-    </span>
+    </ShadcnBadge>
   );
 };
 
