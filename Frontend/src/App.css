@@ -379,3 +379,53 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Dark mode styles */
+.dark .chat-layout {
+  background: #0f172a;
+}
+
+.dark .chat-sidebar {
+  background: #1e293b;
+}
+
+.dark .chat-sidebar .border-b {
+  border-color: #334155;
+}
+
+.dark .chat-sidebar h2 {
+  color: #f1f5f9;
+}
+
+.dark .chat-sidebar p {
+  color: #94a3b8;
+}
+
+.dark .chat-messages {
+  background: #0f172a;
+}
+
+.dark .chat-message {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+.dark .chat-header-details h2 {
+  color: #f1f5f9;
+}
+
+.dark .chat-header-details p {
+  color: #94a3b8;
+}
+
+.dark .border-t {
+  border-color: #334155;
+}
+
+.dark .border-b {
+  border-color: #334155;
+}
+
+.dark .border-r {
+  border-color: #334155;
+}

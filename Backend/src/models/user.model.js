@@ -41,6 +41,45 @@ const userSchema = new mongoose.Schema(
       default: "offline",
     },
 
+    friends: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }],
+
+    friendRequests: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }],
+
+    theme: {
+      type: String,
+      enum: ["light", "dark", "system"],
+      default: "system"
+    },
+
+    username: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+
+    bio: {
+      type: String,
+      default: "",
+      maxlength: 500,
+    },
+
+    inviteCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+
+    chatBackground: {
+      type: String,
+      default: "",
+    },
+
 },
 {timestamps: true}
 
