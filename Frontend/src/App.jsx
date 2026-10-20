@@ -5,6 +5,7 @@ import { SocketProvider } from '@/contexts/SocketContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/use-auth';
+import AppShell from '@/components/AppShell';
 import Chat from '@/pages/Chat';
 import Login from '@/pages/Login';
 import Rooms from '@/pages/Rooms';
@@ -61,7 +62,9 @@ const AppRoutes = () => (
       path="/chat"
       element={
         <ProtectedRoute>
-          <Chat />
+          <AppShell currentPage="chat">
+            <Chat />
+          </AppShell>
         </ProtectedRoute>
       }
     />
@@ -69,7 +72,9 @@ const AppRoutes = () => (
       path="/rooms"
       element={
         <ProtectedRoute>
-          <Rooms />
+          <AppShell currentPage="rooms">
+            <Rooms />
+          </AppShell>
         </ProtectedRoute>
       }
     />
@@ -77,7 +82,9 @@ const AppRoutes = () => (
       path="/friends"
       element={
         <ProtectedRoute>
-          <Friends />
+          <AppShell currentPage="friends">
+            <Friends />
+          </AppShell>
         </ProtectedRoute>
       }
     />
@@ -85,7 +92,9 @@ const AppRoutes = () => (
       path="/dashboard"
       element={
         <ProtectedRoute>
-          <Dashboard />
+          <AppShell currentPage="dashboard">
+            <Dashboard />
+          </AppShell>
         </ProtectedRoute>
       }
     />
@@ -93,7 +102,9 @@ const AppRoutes = () => (
       path="/settings"
       element={
         <ProtectedRoute>
-          <Settings />
+          <AppShell currentPage="settings">
+            <Settings />
+          </AppShell>
         </ProtectedRoute>
       }
     />

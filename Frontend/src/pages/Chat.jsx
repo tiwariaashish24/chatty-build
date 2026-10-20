@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/hooks/use-socket';
-import { useTheme } from '@/contexts/ThemeContext';
 import { messageService } from '@/services/message.service';
 import { uploadService } from '@/services/upload.service';
 import Avatar from '@/components/ui/Avatar';
@@ -17,25 +16,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu.tsx';
 import {
-  ArrowLeft,
   Send,
   Search,
-  LogOut,
-  Users,
   MessageSquare,
-  Sun,
-  Moon,
-  Monitor,
-  BarChart3,
-  UserPlus,
-  Settings,
   Image as ImageIcon,
   Paperclip,
   MapPin,
   Video,
   FileText,
   Mic,
-  MoreHorizontal,
   X,
   Eye,
   EyeOff,
@@ -48,7 +37,6 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [showSidebar, setShowSidebar] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [attachments, setAttachments] = useState([]);
   const [location, setLocation] = useState(null);
@@ -56,9 +44,8 @@ const Chat = () => {
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef(null);
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { onlineUsers, socket } = useSocket();
-  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   const loadUsers = useCallback(async () => {
@@ -286,138 +273,29 @@ const Chat = () => {
   };
 
   return (
-    <div className={`chat-layout ${selectedUser ? 'has-selection' : ''} bg-[#1a1915]`}>
-      {/* Sidebar */}
-      <div
-        className={`chat-sidebar ${showSidebar ? 'is-open' : 'is-closed'} border-r border-[#3c3a36] bg-[#2a2824]`}
-        style={{
-          backgroundImage: user?.chatBackground ? `url(${user.chatBackground})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#3c3a36] p-4">
-          <div className="flex items-center gap-3">
-            <Avatar src={user?.profilePic} alt={user?.fullName} size="lg" online={isOnline(user?._id)} />
-            <div className="min-w-0">
-              <h2 className="truncate text-sm font-semibold text-gray-100">{user?.fullName}</h2>
-              <p className="text-xs text-gray-400">Your account</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/friends')}
-              aria-label="Friends"
-              title="Friends"
-              className="text-gray-200 hover:bg-[#3c3a36]"
-            >
-              <UserPlus className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/rooms')}
-              aria-label="Open rooms"
-              title="Open rooms"
-              className="text-gray-200 hover:bg-[#3c3a36]"
-            >
-              <Users className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              aria-label="Dashboard"
-              title="Dashboard"
-              className="text-gray-200 hover:bg-[#3c3a36]"
-            >
-              <BarChart3 className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/settings')}
-              aria-label="Settings"
-              title="Settings"
-              className="text-gray-200 hover:bg-[#3c3a36]"
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Theme"
-                  title="Theme"
-                  className="text-gray-200 hover:bg-[#3c3a36]"
-                >
-                  {theme === 'light' && <Sun className="h-5 w-5" />}
-                  {theme === 'dark' && <Moon className="h-5 w-5" />}
-                  {theme === 'system' && <Monitor className="h-5 w-5" />}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-[#2a2824] border-[#3c3a36]">
-                <DropdownMenuItem
-                  onClick={() => setTheme('light')}
-                  className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
-                >
-                  <Sun className="h-4 w-4 mr-2" />
-                  Light
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setTheme('dark')}
-                  className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
-                >
-                  <Moon className="h-4 w-4 mr-2" />
-                  Dark
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setTheme('system')}
-                  className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
-                >
-                  <Monitor className="h-4 w-4 mr-2" />
-                  System
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={handleLogout}
-              aria-label="Log out"
-              title="Log out"
-              className="text-gray-200 hover:bg-[#3c3a36]"
-            >
-              <LogOut className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-
+    <div className="flex h-full bg-[#0F172A]">
+      {/* Conversation List Sidebar */}
+      <div className="w-80 border-r border-[rgba(148,163,184,0.16)] flex flex-col bg-[#172338]">
         {/* Search */}
-        <div className="px-4 py-4">
+        <div className="p-4 border-b border-[rgba(148,163,184,0.16)]">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
             <Input
               type="search"
-              placeholder="Search conversations"
-              aria-label="Search users"
+              placeholder="Search conversations..."
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="h-10 border-[#3c3a36] bg-[#1a1915] pl-9 text-gray-100 placeholder:text-gray-500 focus-visible:bg-[#1a1915]"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-[#0F172A] border-[rgba(148,163,184,0.16)] text-[#F8FAFC] placeholder:text-[#94A3B8]"
             />
           </div>
         </div>
 
-        {/* Users List */}
-        <div className="flex-1 overflow-y-auto px-2">
+        {/* Conversation List */}
+        <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-center text-sm text-gray-400">Loading conversations…</div>
+            <div className="p-4 text-center text-sm text-[#94A3B8]">Loading conversations...</div>
           ) : filteredUsers.length === 0 ? (
-            <div className="p-6 text-center text-sm text-gray-400">
+            <div className="p-6 text-center text-sm text-[#94A3B8]">
               {users.length === 0 ? 'No conversations yet.' : 'No users match your search.'}
             </div>
           ) : (
@@ -426,18 +304,25 @@ const Chat = () => {
                 key={u._id}
                 type="button"
                 onClick={() => selectUser(u)}
-                className={`w-full rounded-xl p-3 text-left transition-colors hover:bg-[#3c3a36] ${
-                  selectedUser?._id === u._id ? 'bg-[#3c3a36]' : ''
+                className={`w-full p-4 text-left transition-colors hover:bg-[#243247] border-b border-[rgba(148,163,184,0.16)] ${
+                  selectedUser?._id === u._id ? 'bg-[#243247]' : ''
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Avatar src={u.profilePic} alt={u.fullName} online={isOnline(u._id)} />
+                  <div className="relative">
+                    <Avatar src={u.profilePic} alt={u.fullName} online={isOnline(u._id)} size="lg" />
+                    {isOnline(u._id) && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#22C55E] rounded-full border-2 border-[#172338]" />
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <h3 className="truncate text-sm font-semibold text-gray-100">{u.fullName}</h3>
-                      {isOnline(u._id) && <Badge variant="success">Online</Badge>}
+                      <h3 className="truncate text-sm font-semibold text-[#F8FAFC]">{u.fullName}</h3>
+                      {isOnline(u._id) && (
+                        <span className="text-xs text-[#22C55E]">Online</span>
+                      )}
                     </div>
-                    <p className="truncate text-xs text-gray-400">{u.email}</p>
+                    <p className="truncate text-xs text-[#94A3B8]">{u.email}</p>
                   </div>
                 </div>
               </button>
@@ -447,30 +332,21 @@ const Chat = () => {
       </div>
 
       {/* Chat Area */}
-      <div className="chat-main bg-[#1a1915]">
+      <div className="flex-1 flex flex-col bg-[#0F172A]">
         {selectedUser ? (
           <>
             {/* Chat Header */}
-            <div className="flex items-center justify-between gap-2 border-b border-[#3c3a36] bg-[#2a2824] px-3 py-3 sm:px-5"
-              style={{
-                backgroundImage: user?.chatBackground ? `url(${user.chatBackground})` : 'none',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
-            >
-              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowSidebar(true)}
-                  aria-label="Show conversations"
-                  className="chat-icon-button shrink-0 hover:bg-[#3c3a36] md:hidden text-gray-200"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-                <Avatar src={selectedUser.profilePic} alt={selectedUser.fullName} online={isOnline(selectedUser._id)} />
-                <div className="chat-header-details">
-                  <h2 className="text-sm font-semibold text-gray-100">{selectedUser.fullName}</h2>
-                  <p className="text-xs text-gray-400">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(148,163,184,0.16)] bg-[#172338]">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Avatar src={selectedUser.profilePic} alt={selectedUser.fullName} online={isOnline(selectedUser._id)} size="lg" />
+                  {isOnline(selectedUser._id) && (
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#22C55E] rounded-full border-2 border-[#172338]" />
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-[#F8FAFC]">{selectedUser.fullName}</h2>
+                  <p className="text-xs text-[#94A3B8]">
                     {isOnline(selectedUser._id) ? 'Online' : 'Offline'}
                   </p>
                 </div>
@@ -478,7 +354,7 @@ const Chat = () => {
             </div>
 
             {/* Messages */}
-            <div className="chat-messages flex-1 space-y-4 bg-[#1a1915] p-4 sm:p-6"
+            <div className="flex-1 overflow-y-auto p-6"
               style={{
                 backgroundImage: user?.chatBackground ? `url(${user.chatBackground})` : 'none',
                 backgroundSize: 'cover',
@@ -488,20 +364,20 @@ const Chat = () => {
               {messages.map((message) => (
                 <div
                   key={message._id}
-                  className={`flex ${message.senderId === user?._id ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.senderId === user?._id ? 'justify-end' : 'justify-start'} mb-4`}
                 >
                   <div
-                    className={`chat-message rounded-lg p-3 max-w-[80%] ${
+                    className={`max-w-[70%] rounded-2xl p-4 ${
                       message.senderId === user?._id
-                        ? 'rounded-br-sm bg-[#6366f1] text-gray-100 shadow-sm'
-                        : 'rounded-bl-sm border border-[#3c3a36] bg-[#2a2824] text-gray-100 shadow-sm'
+                        ? 'rounded-br-sm bg-[#4F7CFF] text-[#F8FAFC]'
+                        : 'rounded-bl-sm bg-[#1E293B] text-[#F8FAFC] border border-[rgba(148,163,184,0.16)]'
                     }`}
                   >
                     {message.isDeleted ? (
-                      <p>Message deleted</p>
+                      <p className="text-sm">Message deleted</p>
                     ) : (
                       <>
-                        {message.text && <p className="mb-2">{message.text}</p>}
+                        {message.text && <p className="mb-2 text-sm">{message.text}</p>}
 
                         {/* Attachments */}
                         {message.attachments && message.attachments.length > 0 && (
@@ -534,7 +410,7 @@ const Chat = () => {
                                     href={attachment.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-2 p-2 bg-[#1a1915] rounded-lg hover:bg-[#3c3a36] transition-colors"
+                                    className="flex items-center gap-2 p-2 bg-[#0F172A] rounded-lg hover:bg-[#243247] transition-colors"
                                   >
                                     <FileText className="h-5 w-5" />
                                     <span className="text-sm">{attachment.name}</span>
@@ -552,12 +428,12 @@ const Chat = () => {
                               href={`https://www.google.com/maps?q=${message.location.latitude},${message.location.longitude}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 p-2 bg-[#1a1915] rounded-lg hover:bg-[#3c3a36] transition-colors"
+                              className="flex items-center gap-2 p-2 bg-[#0F172A] rounded-lg hover:bg-[#243247] transition-colors"
                             >
-                              <MapPin className="h-5 w-5 text-red-400" />
+                              <MapPin className="h-5 w-5 text-[#EF4444]" />
                               <div>
                                 <p className="text-sm font-medium">{message.location.placeName}</p>
-                                <p className="text-xs text-gray-400">{message.location.address}</p>
+                                <p className="text-xs text-[#94A3B8]">{message.location.address}</p>
                               </div>
                             </a>
                           </div>
@@ -583,7 +459,7 @@ const Chat = () => {
             </div>
 
             {/* Message Input */}
-            <div className="border-t border-[#3c3a36] bg-[#2a2824] p-3 sm:p-4">
+            <div className="border-t border-[rgba(148,163,184,0.16)] bg-[#172338] p-4">
               {/* Attachments Preview */}
               {(selectedImage || attachments.length > 0 || location) && (
                 <div className="mb-3 space-y-2">
@@ -597,7 +473,7 @@ const Chat = () => {
                       <button
                         type="button"
                         onClick={() => setSelectedImage(null)}
-                        className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-gray-100 hover:bg-red-600"
+                        className="absolute top-1 right-1 p-1 bg-[#EF4444] rounded-full text-[#F8FAFC] hover:bg-[#DC2626]"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -606,30 +482,30 @@ const Chat = () => {
                   {attachments.map((attachment, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-2 p-2 bg-[#1a1915] rounded-lg"
+                      className="flex items-center gap-2 p-2 bg-[#0F172A] rounded-lg"
                     >
                       {attachment.type === 'image' && <ImageIcon className="h-4 w-4" />}
                       {attachment.type === 'video' && <Video className="h-4 w-4" />}
                       {attachment.type === 'audio' && <Mic className="h-4 w-4" />}
                       {attachment.type === 'document' && <FileText className="h-4 w-4" />}
-                      <span className="text-sm text-gray-200 flex-1 truncate">{attachment.name}</span>
+                      <span className="text-sm text-[#F8FAFC] flex-1 truncate">{attachment.name}</span>
                       <button
                         type="button"
                         onClick={() => removeAttachment(idx)}
-                        className="text-red-400 hover:text-red-300"
+                        className="text-[#EF4444] hover:text-[#DC2626]"
                       >
                         <X className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
                   {location && (
-                    <div className="flex items-center gap-2 p-2 bg-[#1a1915] rounded-lg">
-                      <MapPin className="h-4 w-4 text-red-400" />
-                      <span className="text-sm text-gray-200 flex-1 truncate">{location.placeName}</span>
+                    <div className="flex items-center gap-2 p-2 bg-[#0F172A] rounded-lg">
+                      <MapPin className="h-4 w-4 text-[#EF4444]" />
+                      <span className="text-sm text-[#F8FAFC] flex-1 truncate">{location.placeName}</span>
                       <button
                         type="button"
                         onClick={() => setLocation(null)}
-                        className="text-red-400 hover:text-red-300"
+                        className="text-[#EF4444] hover:text-[#DC2626]"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -638,14 +514,14 @@ const Chat = () => {
                   <button
                     type="button"
                     onClick={clearAttachments}
-                    className="text-xs text-gray-400 hover:text-gray-200"
+                    className="text-xs text-[#94A3B8] hover:text-[#F8FAFC]"
                   >
                     Clear all
                   </button>
                 </div>
               )}
 
-              <form onSubmit={handleSendMessage} className="mx-auto flex max-w-4xl gap-2 items-end">
+              <form onSubmit={handleSendMessage} className="flex gap-2 items-end">
                 {/* Attachment Menu */}
                 <DropdownMenu open={showAttachmentMenu} onOpenChange={setShowAttachmentMenu}>
                   <DropdownMenuTrigger asChild>
@@ -653,18 +529,18 @@ const Chat = () => {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="text-gray-400 hover:text-gray-200 hover:bg-[#3c3a36]"
+                      className="text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#243247]"
                     >
                       <Paperclip className="h-5 w-5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-[#2a2824] border-[#3c3a36] w-56">
+                  <DropdownMenuContent className="bg-[#1E293B] border-[rgba(148,163,184,0.16)] w-56">
                     <DropdownMenuItem
                       onClick={() => {
                         document.getElementById('image-upload').click();
                         setShowAttachmentMenu(false);
                       }}
-                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                      className="text-[#F8FAFC] hover:bg-[#243247] focus:bg-[#243247]"
                     >
                       <ImageIcon className="h-4 w-4 mr-2" />
                       Image
@@ -674,7 +550,7 @@ const Chat = () => {
                         document.getElementById('video-upload').click();
                         setShowAttachmentMenu(false);
                       }}
-                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                      className="text-[#F8FAFC] hover:bg-[#243247] focus:bg-[#243247]"
                     >
                       <Video className="h-4 w-4 mr-2" />
                       Video
@@ -684,7 +560,7 @@ const Chat = () => {
                         document.getElementById('audio-upload').click();
                         setShowAttachmentMenu(false);
                       }}
-                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                      className="text-[#F8FAFC] hover:bg-[#243247] focus:bg-[#243247]"
                     >
                       <Mic className="h-4 w-4 mr-2" />
                       Audio
@@ -694,7 +570,7 @@ const Chat = () => {
                         document.getElementById('document-upload').click();
                         setShowAttachmentMenu(false);
                       }}
-                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                      className="text-[#F8FAFC] hover:bg-[#243247] focus:bg-[#243247]"
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       Document
@@ -704,7 +580,7 @@ const Chat = () => {
                         handleLocationShare();
                         setShowAttachmentMenu(false);
                       }}
-                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                      className="text-[#F8FAFC] hover:bg-[#243247] focus:bg-[#243247]"
                     >
                       <MapPin className="h-4 w-4 mr-2" />
                       Location
@@ -714,7 +590,7 @@ const Chat = () => {
                         setIsViewOnce(!isViewOnce);
                         setShowAttachmentMenu(false);
                       }}
-                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                      className="text-[#F8FAFC] hover:bg-[#243247] focus:bg-[#243247]"
                     >
                       {isViewOnce ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
                       {isViewOnce ? 'Disable View Once' : 'View Once'}
@@ -769,17 +645,17 @@ const Chat = () => {
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
                   aria-label="Type a message"
-                  className="flex-1 bg-[#1a1915] border-[#3c3a36] text-gray-100 placeholder:text-gray-500"
+                  className="flex-1 bg-[#0F172A] border-[rgba(148,163,184,0.16)] text-[#F8FAFC] placeholder:text-[#94A3B8]"
                 />
                 <Button
                   type="submit"
                   size="icon"
                   aria-label="Send message"
                   disabled={!newMessage.trim() && !selectedImage && attachments.length === 0 && !location}
-                  className="bg-[#6366f1] hover:bg-[#5558e3]"
+                  className="bg-[#4F7CFF] hover:bg-[#3D5BC7]"
                 >
                   {uploading ? (
-                    <div className="animate-spin h-5 w-5 border-2 border-gray-200 border-t-transparent rounded-full" />
+                    <div className="animate-spin h-5 w-5 border-2 border-[#F8FAFC] border-t-transparent rounded-full" />
                   ) : (
                     <Send className="h-5 w-5" />
                   )}
@@ -788,13 +664,13 @@ const Chat = () => {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-[#1a1915] p-6">
+          <div className="flex-1 flex items-center justify-center bg-[#0F172A] p-6">
             <div className="max-w-sm text-center">
-              <div className="mx-auto mb-5 grid size-16 place-items-center rounded-2xl bg-[#6366f1]/20 text-[#6366f1]">
+              <div className="mx-auto mb-5 grid size-16 place-items-center rounded-2xl bg-[#4F7CFF]/20 text-[#4F7CFF]">
                 <MessageSquare className="size-7" />
               </div>
-              <h2 className="mb-2 text-lg font-semibold text-gray-100">Your conversations, together</h2>
-              <p className="text-sm leading-6 text-gray-400">Choose someone from your conversations to pick up where you left off.</p>
+              <h2 className="mb-2 text-lg font-semibold text-[#F8FAFC]">Your conversations, together</h2>
+              <p className="text-sm leading-6 text-[#94A3B8]">Choose someone from your conversations to pick up where you left off.</p>
             </div>
           </div>
         )}
