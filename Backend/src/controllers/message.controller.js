@@ -76,23 +76,17 @@ export const getRoomMessages = async(req, res) => {
 export const sendMessage = async(req, res) => {
     try {
 
-        const { text, image } = req.body;
+        const { text, attachments, location, isViewOnce } = req.body;
         const { id: reciverId } = req.params;
         const senderId = req.user._id;
-
-
-      
-        let imageUrl;
-        if(image) {
-            const uploadResponse = await cloudinary.uploader.upload(image);
-            imageUrl = uploadResponse.secure_url;
-        }
 
         const newMessage = new Message({
             senderId,
             reciverId,
             text,
-            image: imageUrl,
+            attachments: attachments || [],
+            location,
+            isViewOnce: isViewOnce || false,
         });
 
         await newMessage.save();
@@ -307,15 +301,48 @@ export const markAsRead = async(req, res) => {
         message.readAt = new Date();
         await message.save();
 
-        
+
         const io = req.app.get('io');
 
-        
+
         io.to(message.senderId.toString()).emit('messageRead', { messageId });
 
         res.status(200).json({ message: "Message marked as read" });
     } catch (error) {
         console.log("Error in markAsRead controller:", error.message);
+        res.status(500).json({message: "Internal server error"});
+    }
+}
+
+//mark view-once message as viewed
+export const markViewOnceViewed = async(req, res) => {
+    try {
+        const { id: messageId } = req.params;
+        const userId = req.user._id;
+
+        const message = await Message.findById(messageId);
+
+        if (!message) {
+            return res.status(404).json({ message: "Message not found" });
+        }
+
+        if (!message.isViewOnce) {
+            return res.status(400).json({ message: "Not a view-once message" });
+        }
+
+        // Check if already viewed by this user
+        const alreadyViewed = message.viewedBy.some(
+            v => v.userId.toString() === userId.toString()
+        );
+
+        if (!alreadyViewed) {
+            message.viewedBy.push({ userId });
+            await message.save();
+        }
+
+        res.status(200).json({ message: "Message marked as viewed" });
+    } catch (error) {
+        console.log("Error in markViewOnceViewed controller:", error.message);
         res.status(500).json({message: "Internal server error"});
     }
 }

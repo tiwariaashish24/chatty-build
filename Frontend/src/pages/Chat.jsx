@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/hooks/use-socket';
 import { useTheme } from '@/contexts/ThemeContext';
 import { messageService } from '@/services/message.service';
+import { uploadService } from '@/services/upload.service';
 import Avatar from '@/components/ui/Avatar';
 import Badge from '@/components/ui/Badge';
 import { Button } from '@/components/ui/button.tsx';
@@ -29,6 +30,15 @@ import {
   UserPlus,
   Settings,
   Image as ImageIcon,
+  Paperclip,
+  MapPin,
+  Video,
+  FileText,
+  Mic,
+  MoreHorizontal,
+  X,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 const Chat = () => {
@@ -40,6 +50,11 @@ const Chat = () => {
   const [loading, setLoading] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [attachments, setAttachments] = useState([]);
+  const [location, setLocation] = useState(null);
+  const [isViewOnce, setIsViewOnce] = useState(false);
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef(null);
   const { user, logout } = useAuth();
   const { onlineUsers, socket } = useSocket();
@@ -133,12 +148,19 @@ const Chat = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if ((!newMessage.trim() && !selectedImage) || !selectedUser) return;
+    if ((!newMessage.trim() && !selectedImage && attachments.length === 0 && !location) || !selectedUser) return;
 
     try {
       const messageData = {};
       if (newMessage.trim()) messageData.text = newMessage;
-      if (selectedImage) messageData.image = selectedImage;
+      if (selectedImage) messageData.attachments = [{
+        url: selectedImage,
+        type: 'image',
+        name: 'image',
+      }];
+      if (attachments.length > 0) messageData.attachments = attachments;
+      if (location) messageData.location = location;
+      if (isViewOnce) messageData.isViewOnce = true;
 
       const message = await messageService.sendMessage(selectedUser._id, messageData);
       setMessages((currentMessages) =>
@@ -148,6 +170,9 @@ const Chat = () => {
       );
       setNewMessage('');
       setSelectedImage(null);
+      setAttachments([]);
+      setLocation(null);
+      setIsViewOnce(false);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Could not send message');
     }
@@ -162,6 +187,79 @@ const Chat = () => {
       setSelectedImage(reader.result);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleFileUpload = async (file, type) => {
+    try {
+      setUploading(true);
+      const uploadedFile = await uploadService.uploadFile(file);
+
+      setAttachments([...attachments, {
+        url: uploadedFile.url,
+        type: type,
+        name: uploadedFile.originalName,
+        size: uploadedFile.size,
+        mimeType: uploadedFile.mimeType,
+        publicId: uploadedFile.publicId,
+      }]);
+
+      toast.success('File uploaded successfully');
+    } catch (error) {
+      toast.error('Failed to upload file');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleLocationShare = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          // Get address using reverse geocoding (using OpenStreetMap Nominatim)
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+            );
+            const data = await response.json();
+
+          setLocation({
+            latitude,
+            longitude,
+            address: data.display_name || 'Unknown location',
+            placeName: data.address?.city || data.address?.town || 'Unknown',
+          });
+
+          toast.success('Location captured');
+          } catch (error) {
+            setLocation({
+              latitude,
+              longitude,
+              address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+              placeName: 'Shared location',
+            });
+            toast.success('Location captured');
+          }
+        },
+        (error) => {
+          toast.error('Failed to get location');
+        }
+      );
+    } else {
+      toast.error('Geolocation not supported');
+    }
+  };
+
+  const removeAttachment = (index) => {
+    setAttachments(attachments.filter((_, i) => i !== index));
+  };
+
+  const clearAttachments = () => {
+    setAttachments([]);
+    setLocation(null);
+    setSelectedImage(null);
+    setIsViewOnce(false);
   };
 
   const handleLogout = async () => {
@@ -192,6 +290,11 @@ const Chat = () => {
       {/* Sidebar */}
       <div
         className={`chat-sidebar ${showSidebar ? 'is-open' : 'is-closed'} border-r border-[#3c3a36] bg-[#2a2824]`}
+        style={{
+          backgroundImage: user?.chatBackground ? `url(${user.chatBackground})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#3c3a36] p-4">
@@ -348,7 +451,13 @@ const Chat = () => {
         {selectedUser ? (
           <>
             {/* Chat Header */}
-            <div className="flex items-center justify-between gap-2 border-b border-[#3c3a36] bg-[#2a2824] px-3 py-3 sm:px-5">
+            <div className="flex items-center justify-between gap-2 border-b border-[#3c3a36] bg-[#2a2824] px-3 py-3 sm:px-5"
+              style={{
+                backgroundImage: user?.chatBackground ? `url(${user.chatBackground})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <button
                   type="button"
@@ -369,26 +478,104 @@ const Chat = () => {
             </div>
 
             {/* Messages */}
-            <div className="chat-messages flex-1 space-y-4 bg-[#1a1915] p-4 sm:p-6">
+            <div className="chat-messages flex-1 space-y-4 bg-[#1a1915] p-4 sm:p-6"
+              style={{
+                backgroundImage: user?.chatBackground ? `url(${user.chatBackground})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
               {messages.map((message) => (
                 <div
                   key={message._id}
                   className={`flex ${message.senderId === user?._id ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`chat-message rounded-lg p-3 ${
+                    className={`chat-message rounded-lg p-3 max-w-[80%] ${
                       message.senderId === user?._id
                         ? 'rounded-br-sm bg-[#6366f1] text-gray-100 shadow-sm'
                         : 'rounded-bl-sm border border-[#3c3a36] bg-[#2a2824] text-gray-100 shadow-sm'
                     }`}
                   >
-                    <p>{message.isDeleted ? 'Message deleted' : message.text}</p>
-                    {message.image && (
-                      <img src={message.image} alt="attachment" className="mt-2 rounded-lg max-w-full" />
+                    {message.isDeleted ? (
+                      <p>Message deleted</p>
+                    ) : (
+                      <>
+                        {message.text && <p className="mb-2">{message.text}</p>}
+
+                        {/* Attachments */}
+                        {message.attachments && message.attachments.length > 0 && (
+                          <div className="space-y-2">
+                            {message.attachments.map((attachment, idx) => (
+                              <div key={idx}>
+                                {attachment.type === 'image' && (
+                                  <img
+                                    src={attachment.url}
+                                    alt={attachment.name}
+                                    className="rounded-lg max-w-full max-h-64 object-cover"
+                                  />
+                                )}
+                                {attachment.type === 'video' && (
+                                  <video
+                                    src={attachment.url}
+                                    controls
+                                    className="rounded-lg max-w-full max-h-64"
+                                  />
+                                )}
+                                {attachment.type === 'audio' && (
+                                  <audio
+                                    src={attachment.url}
+                                    controls
+                                    className="w-full"
+                                  />
+                                )}
+                                {attachment.type === 'document' && (
+                                  <a
+                                    href={attachment.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 p-2 bg-[#1a1915] rounded-lg hover:bg-[#3c3a36] transition-colors"
+                                  >
+                                    <FileText className="h-5 w-5" />
+                                    <span className="text-sm">{attachment.name}</span>
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Location */}
+                        {message.location && (
+                          <div className="mt-2">
+                            <a
+                              href={`https://www.google.com/maps?q=${message.location.latitude},${message.location.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 p-2 bg-[#1a1915] rounded-lg hover:bg-[#3c3a36] transition-colors"
+                            >
+                              <MapPin className="h-5 w-5 text-red-400" />
+                              <div>
+                                <p className="text-sm font-medium">{message.location.placeName}</p>
+                                <p className="text-xs text-gray-400">{message.location.address}</p>
+                              </div>
+                            </a>
+                          </div>
+                        )}
+
+                        {/* View-once indicator */}
+                        {message.isViewOnce && (
+                          <div className="flex items-center gap-1 mt-2 text-xs opacity-70">
+                            <Eye className="h-3 w-3" />
+                            <span>View once</span>
+                          </div>
+                        )}
+
+                        <p className="text-xs mt-1 opacity-70">
+                          {new Date(message.createdAt).toLocaleTimeString()}
+                        </p>
+                      </>
                     )}
-                    <p className="text-xs mt-1 opacity-70">
-                      {new Date(message.createdAt).toLocaleTimeString()}
-                    </p>
                   </div>
                 </div>
               ))}
@@ -397,39 +584,186 @@ const Chat = () => {
 
             {/* Message Input */}
             <div className="border-t border-[#3c3a36] bg-[#2a2824] p-3 sm:p-4">
-              {selectedImage && (
-                <div className="mb-3 relative inline-block">
-                  <img
-                    src={selectedImage}
-                    alt="Selected"
-                    className="max-h-32 rounded-lg"
-                  />
+              {/* Attachments Preview */}
+              {(selectedImage || attachments.length > 0 || location) && (
+                <div className="mb-3 space-y-2">
+                  {selectedImage && (
+                    <div className="relative inline-block">
+                      <img
+                        src={selectedImage}
+                        alt="Selected"
+                        className="max-h-32 rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedImage(null)}
+                        className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-gray-100 hover:bg-red-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                  {attachments.map((attachment, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 p-2 bg-[#1a1915] rounded-lg"
+                    >
+                      {attachment.type === 'image' && <ImageIcon className="h-4 w-4" />}
+                      {attachment.type === 'video' && <Video className="h-4 w-4" />}
+                      {attachment.type === 'audio' && <Mic className="h-4 w-4" />}
+                      {attachment.type === 'document' && <FileText className="h-4 w-4" />}
+                      <span className="text-sm text-gray-200 flex-1 truncate">{attachment.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(idx)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {location && (
+                    <div className="flex items-center gap-2 p-2 bg-[#1a1915] rounded-lg">
+                      <MapPin className="h-4 w-4 text-red-400" />
+                      <span className="text-sm text-gray-200 flex-1 truncate">{location.placeName}</span>
+                      <button
+                        type="button"
+                        onClick={() => setLocation(null)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                   <button
                     type="button"
-                    onClick={() => setSelectedImage(null)}
-                    className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-gray-100 hover:bg-red-600"
+                    onClick={clearAttachments}
+                    className="text-xs text-gray-400 hover:text-gray-200"
                   >
-                    ×
+                    Clear all
                   </button>
                 </div>
               )}
-              <form onSubmit={handleSendMessage} className="mx-auto flex max-w-4xl gap-2">
-                <label className="cursor-pointer">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-gray-400 hover:text-gray-200 hover:bg-[#3c3a36]"
-                  >
-                    <ImageIcon className="h-5 w-5" />
-                  </Button>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageSelect}
-                    className="hidden"
-                  />
-                </label>
+
+              <form onSubmit={handleSendMessage} className="mx-auto flex max-w-4xl gap-2 items-end">
+                {/* Attachment Menu */}
+                <DropdownMenu open={showAttachmentMenu} onOpenChange={setShowAttachmentMenu}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-gray-400 hover:text-gray-200 hover:bg-[#3c3a36]"
+                    >
+                      <Paperclip className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-[#2a2824] border-[#3c3a36] w-56">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        document.getElementById('image-upload').click();
+                        setShowAttachmentMenu(false);
+                      }}
+                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                    >
+                      <ImageIcon className="h-4 w-4 mr-2" />
+                      Image
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        document.getElementById('video-upload').click();
+                        setShowAttachmentMenu(false);
+                      }}
+                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                    >
+                      <Video className="h-4 w-4 mr-2" />
+                      Video
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        document.getElementById('audio-upload').click();
+                        setShowAttachmentMenu(false);
+                      }}
+                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                    >
+                      <Mic className="h-4 w-4 mr-2" />
+                      Audio
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        document.getElementById('document-upload').click();
+                        setShowAttachmentMenu(false);
+                      }}
+                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Document
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        handleLocationShare();
+                        setShowAttachmentMenu(false);
+                      }}
+                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Location
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setIsViewOnce(!isViewOnce);
+                        setShowAttachmentMenu(false);
+                      }}
+                      className="text-gray-200 hover:bg-[#3c3a36] focus:bg-[#3c3a36]"
+                    >
+                      {isViewOnce ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                      {isViewOnce ? 'Disable View Once' : 'View Once'}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Hidden file inputs */}
+                <input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) handleFileUpload(file, 'image');
+                  }}
+                  className="hidden"
+                />
+                <input
+                  id="video-upload"
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) handleFileUpload(file, 'video');
+                  }}
+                  className="hidden"
+                />
+                <input
+                  id="audio-upload"
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) handleFileUpload(file, 'audio');
+                  }}
+                  className="hidden"
+                />
+                <input
+                  id="document-upload"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) handleFileUpload(file, 'document');
+                  }}
+                  className="hidden"
+                />
+
                 <Input
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
@@ -441,10 +775,14 @@ const Chat = () => {
                   type="submit"
                   size="icon"
                   aria-label="Send message"
-                  disabled={!newMessage.trim() && !selectedImage}
+                  disabled={!newMessage.trim() && !selectedImage && attachments.length === 0 && !location}
                   className="bg-[#6366f1] hover:bg-[#5558e3]"
                 >
-                  <Send className="h-5 w-5" />
+                  {uploading ? (
+                    <div className="animate-spin h-5 w-5 border-2 border-gray-200 border-t-transparent rounded-full" />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
                 </Button>
               </form>
             </div>

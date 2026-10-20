@@ -68,6 +68,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -77,6 +81,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         updateProfile,
+        updateUser,
         checkAuth,
       }}
     >

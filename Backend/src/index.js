@@ -33,6 +33,7 @@
     app.use("/api/message", messageRoutes);
     app.use("/api/room", roomRoutes);
     app.use("/api/user", userRoutes);
+    app.use("/api/upload", uploadRoutes);
 
     
     app.set('io', io);

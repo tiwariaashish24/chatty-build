@@ -10,7 +10,8 @@ import {
     deleteMessage,
     editMessage,
     addReaction,
-    markAsRead
+    markAsRead,
+    markViewOnceViewed
 } from "../controllers/message.controller.js"
 
 const router = express.Router();
@@ -27,5 +28,6 @@ router.delete("/:id", protectRoute, deleteMessage);
 router.put("/:id", protectRoute, editMessage);
 router.post("/:id/reaction", protectRoute, addReaction);
 router.post("/:id/read", protectRoute, markAsRead);
+router.post("/:id/view-once", protectRoute, markViewOnceViewed);
 
 export default router;

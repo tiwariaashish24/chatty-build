@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 const Settings = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -31,6 +31,7 @@ const Settings = () => {
     username: user?.username || '',
     bio: user?.bio || '',
     profilePic: user?.profilePic || '',
+    chatBackground: user?.chatBackground || '',
   });
 
   useEffect(() => {
@@ -59,7 +60,8 @@ const Settings = () => {
     setLoading(true);
 
     try {
-      await userService.updateProfile(formData);
+      const updatedUser = await userService.updateProfile(formData);
+      updateUser(updatedUser);
       toast.success('Profile updated successfully!');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update profile');
@@ -82,6 +84,17 @@ const Settings = () => {
     const reader = new FileReader();
     reader.onloadend = () => {
       setFormData({ ...formData, profilePic: reader.result });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleChatBackgroundChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData({ ...formData, chatBackground: reader.result });
     };
     reader.readAsDataURL(file);
   };
@@ -179,6 +192,51 @@ const Settings = () => {
                   className="bg-[#1a1915] border-[#3c3a36] text-gray-100 resize-none"
                 />
                 <p className="text-xs text-gray-400">{formData.bio.length}/500</p>
+              </div>
+
+              {/* Chat Background */}
+              <div className="space-y-2">
+                <Label htmlFor="chat-background" className="text-gray-200">Chat Background</Label>
+                <div className="flex gap-4">
+                  <div className="relative">
+                    {formData.chatBackground ? (
+                      <img
+                        src={formData.chatBackground}
+                        alt="Chat background"
+                        className="h-24 w-24 object-cover rounded-lg"
+                      />
+                    ) : (
+                      <div className="h-24 w-24 bg-[#1a1915] border border-[#3c3a36] rounded-lg flex items-center justify-center">
+                        <span className="text-gray-400 text-sm">No background</span>
+                      </div>
+                    )}
+                    <label
+                      htmlFor="chat-background"
+                      className="absolute bottom-0 right-0 p-2 bg-[#6366f1] rounded-full cursor-pointer hover:bg-[#5558e3] transition-colors"
+                    >
+                      <Camera className="h-4 w-4 text-white" />
+                    </label>
+                    <input
+                      id="chat-background"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleChatBackgroundChange}
+                      className="hidden"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-400 mb-2">Customize your chat background</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, chatBackground: '' })}
+                      className="border-[#3c3a36] text-gray-200 hover:bg-[#3c3a36]"
+                    >
+                      Remove Background
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <Button

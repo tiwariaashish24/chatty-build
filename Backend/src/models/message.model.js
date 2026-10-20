@@ -20,11 +20,40 @@ const messageSchema = new mongoose.Schema(
 
         text: {
             type: String,
+        },
 
+        attachments: [{
+            url: String,
+            type: {
+                type: String,
+                enum: ['image', 'video', 'audio', 'document'],
+            },
+            name: String,
+            size: Number,
+            mimeType: String,
+            publicId: String,
+        }],
+
+        location: {
+            latitude: Number,
+            longitude: Number,
+            address: String,
+            placeName: String,
         },
-        image: {
-            type: String,
+
+        isViewOnce: {
+            type: Boolean,
+            default: false,
         },
+
+        viewedBy: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            viewedAt: {
+                type: Date,
+                default: Date.now,
+            },
+        }],
 
         isEdited: {
             type: Boolean,

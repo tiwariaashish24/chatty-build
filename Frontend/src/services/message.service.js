@@ -50,4 +50,9 @@ export const messageService = {
     const response = await api.post(`/api/message/${messageId}/read`);
     return response.data;
   },
+
+  markViewOnceViewed: async (messageId) => {
+    const response = await api.post(`/api/message/${messageId}/view-once`);
+    return response.data;
+  },
 };

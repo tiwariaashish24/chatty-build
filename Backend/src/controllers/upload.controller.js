@@ -8,7 +8,6 @@ export const uploadFile = async (req, res) => {
         }
 
         const file = req.file;
-        const fileExtension = file.mimetype.split('/')[1];
 
         // Determine resource type based on file type
         let resourceType = 'image';
@@ -20,8 +19,11 @@ export const uploadFile = async (req, res) => {
             resourceType = 'auto'; // Let Cloudinary auto-detect
         }
 
+        // Convert buffer to base64 for Cloudinary
+        const base64 = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+
         // Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(file.path, {
+        const result = await cloudinary.uploader.upload(base64, {
             resource_type: resourceType,
             folder: 'chat-attachments',
         });
@@ -32,6 +34,7 @@ export const uploadFile = async (req, res) => {
             resourceType: result.resource_type,
             mimeType: file.mimetype,
             originalName: file.originalname,
+            size: file.size,
         });
     } catch (error) {
         console.log("Error in uploadFile controller:", error.message);
