@@ -187,4 +187,10 @@ Contributions and suggestions are welcome.
 
 ---
 
-Built with ❤️ using React and Node.js.
+## Contact
+
+For queries, reach out to me:
+
+- LinkedIn: [Ashish Kumar Tiwari](https://www.linkedin.com/in/ashish-kumar-tiwari-812698296/)
+- Email: [tiwariiashish04@gmail.com](mailto:tiwariiashish04@gmail.com)
+- GitHub: [github.com/tiwariaashish24](https://github.com/tiwariaashish24)
